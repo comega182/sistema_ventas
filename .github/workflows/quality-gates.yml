@@ -1,5 +1,7 @@
+# Flujo de trabajo
 name: Quality Gates
 
+# Ejecuciones condicionadas
 on:
   push:
     branches: ["main", "develop", "feature/**"]
@@ -20,6 +22,22 @@ jobs:
     name: Backend Quality (PHP)
     runs-on: ubuntu-latest
 
+    # 👇 Agregar servicio de PostgreSQL
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testing_ventas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       # Paso 1: Clonar el repositorio
       - name: Checkout Repository
@@ -30,16 +48,27 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_pgsql
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo, pdo_pgsql
           coverage: none
+
+      # Paso 2: Garantizar el uso de las mismas dependencias
+      - name: Create Cache
+        uses: actions/cache@v4                         # Cache de dependencias Composer
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
 
       # Paso 3: Instalar dependencias de PHP
       - name: Install Composer Dependencies
         run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-      # Paso 5: GATE 1 - Verificar estilo de código con Laravel Pint
+      # Paso 4: GATE 1 - Verificar estilo de código con Laravel Pint
       - name: "Gate 1: Code Style (Laravel Pint)"
         run: ./vendor/bin/pint --test
+
+      # Paso 5: GATE 2 - Analiza el código PHP sin ejecutarlo (análisis estático) con phpstan
+      - name: "Gate 2: Static Analysis (Laravel PHPStan)"
+        run: ./vendor/bin/phpstan analyse app routes database
 
       # Paso 6: Configurar entorno para tests
       - name: Setup Test Environment
@@ -48,16 +77,33 @@ jobs:
           php artisan key:generate
           touch database/database.sqlite
 
-      # Paso 7: GATE 2 - Auditoría de seguridad de dependencias PHP
-      - name: "Gate 2: Security Audit (Composer)"
+      # Paso 7: Configurar base de datos para tests
+      - name: Setup Run Migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: testing_ventas
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+
+      # Paso 8: GATE 3 - Auditoría de seguridad de dependencias PHP
+      - name: "Gate 3: Security Audit (Composer)"
         run: composer audit
 
-      # Paso 8: GATE 3 - Ejecutar tests unitarios y de integración
-      - name: "Gate 3: PHPUnit Tests"
+      # Paso 9: GATE 4 - Ejecutar tests unitarios y de integración
+      - name: "Gate 4: PHPUnit Tests"
         run: php artisan test
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
+        #  DB_CONNECTION: sqlite
+        #  DB_DATABASE: database/database.sqlite
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: testing_ventas
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
 
   # ==================================================================
   # JOB 2: FRONTEND QUALITY GATES (JavaScript/Vue)
@@ -80,7 +126,7 @@ jobs:
 
       # Paso 3: Instalar dependencias de Node.js
       - name: Install NPM Dependencies
-        run: npm ci
+        run: npm ci #ci producction | install develop
 
       # Paso 4: GATE 1 - Verificar estilo de código con ESLint
       - name: "Gate 1: Code Style (ESLint)"

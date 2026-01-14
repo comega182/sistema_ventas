@@ -8,7 +8,7 @@
                 <h3>Sistema de Ventas</h3>
                 <p class="text-muted">Ingresa tus credenciales para continuar</p>
             </div>
-            
+
             <form @submit.prevent="login">
                 <div class="mb-3">
                     <label class="form-label">Correo Electrónico</label>
@@ -16,25 +16,25 @@
                         <span class="input-group-text bg-light border-end-0">
                             <i class="fas fa-envelope text-muted"></i>
                         </span>
-                        <input 
-                            type="email" 
-                            class="form-control border-start-0 ps-0" 
-                            v-model="credentials.email" 
+                        <input
+                            type="email"
+                            class="form-control border-start-0 ps-0"
+                            v-model="credentials.email"
                             required
                             placeholder="ejemplo@correo.com">
                     </div>
                 </div>
-                
+
                 <div class="mb-4">
                     <label class="form-label">Contraseña</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0">
                             <i class="fas fa-lock text-muted"></i>
                         </span>
-                        <input 
-                            type="password" 
-                            class="form-control border-start-0 ps-0" 
-                            v-model="credentials.password" 
+                        <input
+                            type="password"
+                            class="form-control border-start-0 ps-0"
+                            v-model="credentials.password"
                             required
                             placeholder="••••••••">
                     </div>
@@ -80,20 +80,20 @@ const login = async () => {
     try {
         // Asegurar que CSRF cookie esté establecida obteniendo sanctum cookie primero si fuera necesario (en SPA Laravel puro)
         // await axios.get('/sanctum/csrf-cookie');
-        
+
         const response = await axios.post('/api/v1/auth/login', credentials);
-        
+
         if (response.data.success) {
             const token = response.data.data.token;
             const user = response.data.data.user;
-            
+
             // Guardar token y usuario
             localStorage.setItem('auth_token', token);
             localStorage.setItem('user_data', JSON.stringify(user));
-            
+
             // Configurar axios por defecto
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            
+
             // Emitir evento al componente padre
             emit('login-success', user);
         }
@@ -107,7 +107,7 @@ const login = async () => {
         } else {
             error.value = 'Error de conexión. Inténtalo más tarde.';
         }
-        console.error(err);
+        // console.error(err);
     } finally {
         loading.value = false;
     }
