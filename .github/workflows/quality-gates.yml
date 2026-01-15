@@ -51,12 +51,14 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo, pdo_pgsql
           coverage: none
 
-      # Paso 2: Garantizar el uso de las mismas dependencias
+      # Paso 3: Garantizar el uso de las mismas dependencias
       - name: Create Cache
         uses: actions/cache@v4                         # Cache de dependencias Composer
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
       # Paso 3: Instalar dependencias de PHP
       - name: Install Composer Dependencies
@@ -92,9 +94,9 @@ jobs:
       - name: "Gate 3: Security Audit (Composer)"
         run: composer audit
 
-      # Paso 9: GATE 4 - Ejecutar tests unitarios y de integración
-      - name: "Gate 4: PHPUnit Tests"
-        run: php artisan test
+      # Paso 9: GATE 4 - Ejecutar tests unitarios y de integración minimo coverage 80%
+      - name: "Gate 4: PHPUnit Tests with Coverage"
+        run: php artisan test --coverage-text --coverage-clover=coverage.xml
         env:
         #  DB_CONNECTION: sqlite
         #  DB_DATABASE: database/database.sqlite
