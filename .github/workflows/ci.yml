@@ -49,7 +49,7 @@ jobs:
         with:
           php-version: "8.2"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo, pdo_pgsql
-          coverage: pcov
+          coverage: pcov # coverage Xdebug
 
       # Paso 3: Garantizar el uso de las mismas dependencias
       - name: Create Cache
