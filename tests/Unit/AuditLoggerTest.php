@@ -29,7 +29,7 @@ class AuditLoggerTest extends TestCase
             }));
 
         // Act
-        AuditLogger::log('PRUEBA', 'info', 'Descripción de nueva prueba');
+        AuditLogger::log('PRUEBA', 'info', 'Descripción de prueba');
         // Assert
         $this->assertTrue(true);
     }
