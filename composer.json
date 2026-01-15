@@ -52,6 +52,12 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "lint": [
+            "./vendor/bin/pint --test"
+        ],
+        "static": [
+            "./vendor/bin/phpstan analyse app routes database"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

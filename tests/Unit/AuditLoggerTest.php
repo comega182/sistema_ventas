@@ -24,12 +24,13 @@ class AuditLoggerTest extends TestCase
                 $contieneTipo = str_contains($mensaje, 'TIPO: PRUEBA');
                 $contieneNivel = str_contains($mensaje, 'NIVEL: info');
                 $contieneDescripcion = str_contains($mensaje, 'DESCRIPCIÓN: Descripción de prueba');
+
                 return $contieneTipo && $contieneNivel && $contieneDescripcion;
             }));
 
         // Act
         AuditLogger::log('PRUEBA', 'info', 'Descripción de prueba');
-        // Assert - Si llega aquí, todas las expectativas se cumplieron
+        // Assert
         $this->assertTrue(true);
     }
 }
